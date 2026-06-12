@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% set active_page = 'home' %}
+{% block title %}Dashboard{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Overview</h1>
+  <p>Monitor all complaints and detections in one place.</p>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="stat-label"><i class="ti ti-file-description"></i> Total complaints</div>
+    <div class="stat-value">{{ total_complaints or 0 }}</div>
+    <div class="stat-change"><i class="ti ti-trending-up" style="font-size:12px"></i> active this month</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label"><i class="ti ti-video"></i> Videos processed</div>
+    <div class="stat-value">{{ total_videos or 0 }}</div>
+    <div class="stat-change"><i class="ti ti-cpu" style="font-size:12px"></i> via AI pipeline</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label"><i class="ti ti-scan"></i> Face detections</div>
+    <div class="stat-value">{{ total_detections or 0 }}</div>
+    <div class="stat-change"><i class="ti ti-user-check" style="font-size:12px"></i> matches found</div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div style="display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap;">
+  <a href="/upload">
+    <button class="btn btn-primary"><i class="ti ti-file-plus"></i> Register complaint</button>
+  </a>
+  <a href="/upload">
+    <button class="btn btn-amber"><i class="ti ti-video-plus"></i> Upload video</button>
+  </a>
+</div>
+
+<!-- Recent Complaints Table -->
+<div class="card">
+  <div class="card-title"><i class="ti ti-list-details"></i> Recent complaints</div>
+
+  {% if complaints %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Complainant</th>
+          <th>Type</th>
+          <th>Location</th>
+          <th>Filed</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in complaints %}
+        <tr>
+          <td><span style="font-weight:500; color:var(--sage)">#{{ c.id }}</span></td>
+          <td>{{ c.complainant_name }}</td>
+          <td>
+            <span class="badge badge-gray">{{ c.complaint_type }}</span>
+          </td>
+          <td>
+            <span style="display:flex; align-items:center; gap:5px; color:var(--ink-mid)">
+              <i class="ti ti-map-pin" style="font-size:13px"></i>{{ c.location }}
+            </span>
+          </td>
+          <td style="color:var(--ink-soft); font-size:13px">{{ c.created_at }}</td>
+          <td>
+            <a href="/report/{{ c.id }}">
+              <button class="btn btn-outline btn-sm">
+                <i class="ti ti-eye"></i> View
+              </button>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center; padding:40px 20px; color:var(--ink-soft);">
+    <i class="ti ti-inbox" style="font-size:40px; display:block; margin-bottom:10px; color:var(--sage-mid)"></i>
+    <p style="font-size:15px; margin-bottom:6px; color:var(--ink-mid)">No complaints yet</p>
+    <p style="font-size:13px">Start by registering your first complaint.</p>
+    <a href="/upload" style="display:inline-block; margin-top:16px;">
+      <button class="btn btn-primary btn-sm"><i class="ti ti-plus"></i> Register now</button>
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

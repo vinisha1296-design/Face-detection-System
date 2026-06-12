@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicWatch — {% block title %}Portal{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sage:        #4A7C6F;
+      --sage-dark:   #3d6b5e;
+      --sage-mid:    #A8CCBF;
+      --sage-light:  #E8F2EF;
+      --amber:       #C97B3A;
+      --amber-dark:  #b06b2e;
+      --amber-light: #FDF3E8;
+      --ink:         #2C3A35;
+      --ink-mid:     #5A6B64;
+      --ink-soft:    #8FA39B;
+      --surface:     #F7F9F8;
+      --white:       #FFFFFF;
+      --border:      rgba(74,124,111,0.18);
+      --red-soft:    #FBF0EE;
+      --red:         #C05A42;
+      --shadow-sm:   0 1px 4px rgba(44,58,53,0.07);
+      --shadow-md:   0 4px 16px rgba(44,58,53,0.10);
+      --radius:      10px;
+      --radius-lg:   14px;
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--surface);
+      line-height: 1.6;
+    }
+    a { color: var(--sage); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 230px;
+      min-width: 230px;
+      background: var(--ink);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+      padding: 0 4px;
+    }
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--sage);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-icon i { color: #fff; font-size: 18px; }
+    .logo-name { font-size: 15px; font-weight: 600; color: #fff; }
+    .logo-tagline { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+    .nav-group-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.3);
+      padding: 0 8px;
+      margin: 14px 0 6px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      color: rgba(255,255,255,0.55);
+      transition: all 0.16s ease;
+      text-decoration: none;
+      margin-bottom: 2px;
+    }
+    .nav-link i { font-size: 17px; flex-shrink: 0; }
+    .nav-link:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); text-decoration: none; }
+    .nav-link.active { background: var(--sage); color: #fff; }
+    .nav-sep { border: none; border-top: 0.5px solid rgba(255,255,255,0.1); margin: 12px 0; }
+
+    .sidebar-bottom { margin-top: auto; }
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+    }
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--sage);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .user-name { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500; }
+    .user-role { font-size: 11px; color: rgba(255,255,255,0.35); }
+
+    /* ── Main Content ── */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar {
+      background: var(--white);
+      border-bottom: 0.5px solid var(--border);
+      padding: 14px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+    .topbar-breadcrumb span { color: var(--ink); font-weight: 500; }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      border: 0.5px solid var(--border);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--ink-mid);
+      transition: all 0.15s;
+    }
+    .icon-btn:hover { background: var(--sage-light); color: var(--sage); border-color: var(--sage-mid); }
+    .icon-btn i { font-size: 17px; }
+
+    .content { padding: 32px 36px; flex: 1; }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 22px; font-weight: 600; color: var(--ink); }
+    .page-header p { font-size: 14px; color: var(--ink-mid); margin-top: 5px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--white);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title i { font-size: 17px; color: var(--sage); }
+
+    /* ── Stat row ── */
+    .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--white);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .stat-label {
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .stat-label i { font-size: 14px; }
+    .stat-value { font-size: 28px; font-weight: 600; color: var(--ink); }
+    .stat-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11.5px;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--sage-light);
+      color: var(--sage-dark);
+    }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 11px;
+      color: var(--ink-soft);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 0.5px solid var(--border);
+    }
+    tbody td {
+      padding: 13px 14px;
+      border-bottom: 0.5px solid rgba(74,124,111,0.07);
+      color: var(--ink);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 0.12s; }
+    tbody tr:hover td { background: var(--sage-light); }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 500;
+    }
+    .badge-green  { background: #E6F4EE; color: #2D7A55; }
+    .badge-amber  { background: #FDF0DC; color: #9A5E1A; }
+    .badge-red    { background: var(--red-soft); color: var(--red); }
+    .badge-gray   { background: #EEF0EF; color: var(--ink-mid); }
+    .badge-sage   { background: var(--sage-light); color: var(--sage-dark); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      line-height: 1;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn i { font-size: 16px; }
+    .btn-primary { background: var(--sage); color: #fff; }
+    .btn-primary:hover { background: var(--sage-dark); box-shadow: 0 2px 8px rgba(74,124,111,0.3); }
+    .btn-amber { background: var(--amber); color: #fff; }
+    .btn-amber:hover { background: var(--amber-dark); box-shadow: 0 2px 8px rgba(201,123,58,0.3); }
+    .btn-outline {
+      background: transparent;
+      color: var(--ink-mid);
+      border: 0.5px solid var(--border);
+    }
+    .btn-outline:hover { background: var(--surface); border-color: var(--sage-mid); }
+    .btn-danger { background: var(--red-soft); color: var(--red); border: 0.5px solid rgba(192,90,66,0.2); }
+    .btn-danger:hover { background: #f5ddd8; }
+    .btn-sm { padding: 6px 14px; font-size: 12.5px; }
+
+    /* ── Forms ── */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row.full { grid-template-columns: 1fr; }
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 12.5px; font-weight: 500; color: var(--ink-mid); }
+    .form-input,
+    .form-select,
+    .form-textarea {
+      padding: 9px 13px;
+      font-size: 14px;
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+      width: 100%;
+    }
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(74,124,111,0.12);
+      background: var(--white);
+    }
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: var(--ink-soft); }
+    .form-textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .form-select { appearance: none; cursor: pointer; }
+
+    /* ── Alerts / Notices ── */
+    .alert {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      font-size: 13.5px;
+      margin-bottom: 16px;
+    }
+    .alert i { font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+    .alert-success { background: #EBF8F2; border: 0.5px solid #A0D9BC; color: #1E6640; }
+    .alert-warning { background: var(--amber-light); border: 0.5px solid #f0c080; color: #7A4A10; }
+    .alert-danger  { background: var(--red-soft); border: 0.5px solid rgba(192,90,66,0.25); color: #8B3320; }
+    .alert-info    { background: #EAF4FD; border: 0.5px solid #A0CCE8; color: #1A4F6E; }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .animate-in { animation: fadeUp 0.3s ease forwards; }
+    .spin { animation: spin 0.9s linear infinite; }
+
+    /* ── Flash messages ── */
+    .flash-wrap { padding: 0 36px; margin-top: 16px; }
+    .flash {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 13.5px;
+      animation: fadeUp 0.3s ease;
+    }
+    .flash-success { background: #EBF8F2; border: 0.5px solid #A0D9BC; color: #1E6640; }
+    .flash-error   { background: var(--red-soft); border: 0.5px solid rgba(192,90,66,0.25); color: #8B3320; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding: 20px 18px; }
+      .topbar { padding: 12px 18px; }
+      .form-row { grid-template-columns: 1fr; }
+      .form-row.three { grid-template-columns: 1fr; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-shield-check"></i></div>
+      <div>
+        <div class="logo-name">CivicWatch</div>
+        <div class="logo-tagline">Complaint Portal</div>
+      </div>
+    </div>
+
+    <div class="nav-group-label">Main</div>
+    <a href="/" class="nav-link {% if active_page == 'home' %}active{% endif %}">
+      <i class="ti ti-layout-dashboard"></i> Dashboard
+    </a>
+    <a href="/upload" class="nav-link {% if active_page == 'upload' %}active{% endif %}">
+      <i class="ti ti-video-plus"></i> New Complaint + Video
+    </a>
+
+    <div class="nav-group-label">Records</div>
+    <a href="/complaints" class="nav-link {% if active_page == 'complaints' %}active{% endif %}">
+      <i class="ti ti-file-description"></i> All Complaints
+    </a>
+    <a href="/detections" class="nav-link {% if active_page == 'detections' %}active{% endif %}">
+      <i class="ti ti-scan"></i> Detections
+    </a>
+
+    <hr class="nav-sep">
+    <a href="/settings" class="nav-link {% if active_page == 'settings' %}active{% endif %}">
+      <i class="ti ti-settings"></i> Settings
+    </a>
+
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="user-avatar">AD</div>
+        <div>
+          <div class="user-name">Admin</div>
+          <div class="user-role">Officer</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-breadcrumb">
+        <i class="ti ti-home" style="font-size:15px"></i>
+        <span>/</span>
+        <span>{% block breadcrumb %}Dashboard{% endblock %}</span>
+      </div>
+      <div class="topbar-actions">
+        <a href="/upload" title="New complaint">
+          <button class="icon-btn"><i class="ti ti-plus"></i></button>
+        </a>
+        <button class="icon-btn"><i class="ti ti-bell"></i></button>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-wrap">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+              <i class="ti ti-{% if category == 'success' %}circle-check{% else %}alert-circle{% endif %}"></i>
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div class="content animate-in">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

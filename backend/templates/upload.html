@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+{% set active_page = 'upload' %}
+{% block title %}New Complaint{% endblock %}
+{% block breadcrumb %}New Complaint{% endblock %}
+
+{% block extra_head %}
+<style>
+  .step-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 32px;
+    gap: 0;
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.5px;
+    font-weight: 600;
+    transition: all 0.22s ease;
+    flex-shrink: 0;
+  }
+  .step-item.done .step-num { background: var(--sage); border-color: var(--sage); color: #fff; }
+  .step-item.active .step-num { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+  .step-item.active { color: var(--ink); }
+  .step-connector { flex: 1; height: 1px; background: var(--border); margin: 0 10px; min-width: 30px; }
+  .step-connector.done { background: var(--sage); }
+
+  .type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .type-chip {
+    padding: 12px 10px;
+    border: 0.5px solid var(--border);
+    border-radius: 9px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 13px;
+    color: var(--ink-mid);
+    background: var(--surface);
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .type-chip i { font-size: 20px; }
+  .type-chip:hover { border-color: var(--sage); color: var(--sage); background: var(--sage-light); }
+  .type-chip.selected { border-color: var(--sage); background: var(--sage-light); color: var(--sage); font-weight: 500; }
+
+  .upload-zone {
+    border: 1.5px dashed var(--sage-mid);
+    border-radius: 10px;
+    padding: 40px 24px;
+    text-align: center;
+    background: var(--sage-light);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    margin-bottom: 18px;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--sage);
+    background: #d8eee8;
+  }
+  .upload-icon { font-size: 38px; color: var(--sage); margin-bottom: 10px; display: block; }
+  .upload-main { font-size: 14.5px; color: var(--ink); margin-bottom: 4px; }
+  .upload-main strong { color: var(--sage); }
+  .upload-hint { font-size: 12px; color: var(--ink-soft); }
+
+  .file-preview {
+    display: none;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--sage-light);
+    border-radius: 9px;
+    border: 0.5px solid var(--sage-mid);
+    margin-bottom: 18px;
+    animation: fadeUp 0.25s ease;
+  }
+  .file-preview.show { display: flex; }
+  .file-icon { font-size: 26px; color: var(--sage); }
+  .file-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+  .file-size { font-size: 12px; color: var(--ink-mid); }
+  .file-remove {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-size: 18px;
+    padding: 4px;
+    border-radius: 5px;
+    transition: color 0.12s;
+  }
+  .file-remove:hover { color: var(--red); }
+
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 28px 0 20px;
+  }
+  .section-divider span {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .section-divider::before, .section-divider::after {
+    content: '';
+    flex: 1;
+    height: 0.5px;
+    background: var(--border);
+  }
+
+  #submit-btn.loading i { animation: spin 0.9s linear infinite; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>New complaint</h1>
+  <p>Fill in the details and optionally upload a surveillance video for AI analysis.</p>
+</div>
+
+<!-- Step indicator -->
+<div class="step-bar">
+  <div class="step-item done" id="s1">
+    <div class="step-num"><i class="ti ti-check" style="font-size:13px"></i></div>
+    <span>Complaint type</span>
+  </div>
+  <div class="step-connector done"></div>
+  <div class="step-item active" id="s2">
+    <div class="step-num">2</div>
+    <span>Your details</span>
+  </div>
+  <div class="step-connector"></div>
+  <div class="step-item" id="s3">
+    <div class="step-num">3</div>
+    <span>Video (optional)</span>
+  </div>
+  <div class="step-connector"></div>
+  <div class="step-item" id="s4">
+    <div class="step-num">4</div>
+    <span>Submit</span>
+  </div>
+</div>
+
+<!-- Main form card -->
+<div class="card">
+  <div class="card-title"><i class="ti ti-tag"></i> Complaint type</div>
+  <div class="type-grid" id="type-grid">
+    <div class="type-chip selected" data-value="Theft" onclick="selectType(this)">
+      <i class="ti ti-package"></i> Theft
+    </div>
+    <div class="type-chip" data-value="Harassment" onclick="selectType(this)">
+      <i class="ti ti-alert-triangle"></i> Harassment
+    </div>
+    <div class="type-chip" data-value="Vandalism" onclick="selectType(this)">
+      <i class="ti ti-tools"></i> Vandalism
+    </div>
+    <div class="type-chip" data-value="Noise" onclick="selectType(this)">
+      <i class="ti ti-volume"></i> Noise disturbance
+    </div>
+    <div class="type-chip" data-value="Traffic" onclick="selectType(this)">
+      <i class="ti ti-car"></i> Traffic violation
+    </div>
+    <div class="type-chip" data-value="Other" onclick="selectType(this)">
+      <i class="ti ti-dots-circle-horizontal"></i> Other
+    </div>
+  </div>
+
+  <div class="section-divider"><span>Your information</span></div>
+
+  <form id="main-form" action="/submit_complaint" method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="complaint_type" id="complaint_type_input" value="Theft">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Full name *</label>
+        <input type="text" name="complainant_name" class="form-input" placeholder="e.g. Priya Sharma" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone number</label>
+        <input type="text" name="phone" class="form-input" placeholder="+91 98765 43210">
+      </div>
+    </div>
+
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Location / address *</label>
+        <input type="text" name="location" id="location_input" class="form-input" placeholder="e.g. Chennai Mall, Anna Salai" required>
+      </div>
+    </div>
+
+    <div class="form-row full">
+      <div class="form-group">
+        <label class="form-label">Describe the incident *</label>
+        <textarea name="description" class="form-textarea" rows="4"
+          placeholder="Describe what happened, when it occurred, and any other relevant details..." required></textarea>
+      </div>
+    </div>
+
+    <div class="section-divider"><span>Video evidence (optional)</span></div>
+
+    <div class="upload-zone" id="drop-zone"
+         onclick="document.getElementById('video_file').click()"
+         ondragover="handleDragOver(event)"
+         ondragleave="handleDragLeave(event)"
+         ondrop="handleDrop(event)">
+      <i class="ti ti-cloud-upload upload-icon"></i>
+      <p class="upload-main"><strong>Click to upload</strong> or drag and drop</p>
+      <p class="upload-hint">MP4, MOV, AVI — up to 500 MB</p>
+      <input type="file" name="video" id="video_file" accept="video/*" style="display:none" onchange="handleFile(this)">
+    </div>
+
+    <div class="file-preview" id="file-preview">
+      <i class="ti ti-file-video file-icon"></i>
+      <div>
+        <div class="file-name" id="file-name">—</div>
+        <div class="file-size" id="file-size">—</div>
+      </div>
+      <button type="button" class="file-remove" onclick="removeFile()" title="Remove file">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:8px; align-items:center; flex-wrap:wrap;">
+      <button type="submit" class="btn btn-primary" id="submit-btn">
+        <i class="ti ti-send"></i> Submit complaint
+      </button>
+      <a href="/">
+        <button type="button" class="btn btn-outline"><i class="ti ti-arrow-left"></i> Cancel</button>
+      </a>
+      <span style="font-size:12px; color:var(--ink-soft); margin-left:4px">* required fields</span>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function selectType(el) {
+    document.querySelectorAll('.type-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('complaint_type_input').value = el.dataset.value;
+  }
+
+  function handleFile(input) {
+    if (!input.files || !input.files.length) return;
+    const f = input.files[0];
+    showFilePreview(f);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.add('drag-over');
+  }
+
+  function handleDragLeave(e) {
+    document.getElementById('drop-zone').classList.remove('drag-over');
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      document.getElementById('video_file').files = files;
+      showFilePreview(files[0]);
+    }
+  }
+
+  function showFilePreview(f) {
+    document.getElementById('file-name').textContent = f.name;
+    document.getElementById('file-size').textContent = (f.size / 1024 / 1024).toFixed(1) + ' MB';
+    const preview = document.getElementById('file-preview');
+    preview.classList.add('show');
+    document.getElementById('drop-zone').style.display = 'none';
+  }
+
+  function removeFile() {
+    document.getElementById('video_file').value = '';
+    document.getElementById('file-preview').classList.remove('show');
+    document.getElementById('drop-zone').style.display = 'block';
+  }
+
+  document.getElementById('main-form').addEventListener('submit', function() {
+    const btn = document.getElementById('submit-btn');
+    btn.innerHTML = '<i class="ti ti-loader-2 spin"></i> Submitting…';
+    btn.disabled = true;
+  });
+</script>
+{% endblock %}

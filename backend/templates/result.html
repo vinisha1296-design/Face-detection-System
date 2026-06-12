@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% set active_page = '' %}
+{% block title %}Detection Results{% endblock %}
+{% block breadcrumb %}Detection Results{% endblock %}
+
+{% block extra_head %}
+<style>
+  .result-hero {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 28px;
+    border-radius: var(--radius-lg);
+    margin-bottom: 24px;
+    border: 0.5px solid;
+    animation: fadeUp 0.35s ease;
+  }
+  .result-hero.match {
+    background: var(--red-soft);
+    border-color: rgba(192,90,66,0.25);
+  }
+  .result-hero.no-match {
+    background: var(--sage-light);
+    border-color: var(--sage-mid);
+  }
+  .hero-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 26px;
+  }
+  .hero-icon.match { background: rgba(192,90,66,0.15); color: var(--red); }
+  .hero-icon.no-match { background: var(--sage-light); color: var(--sage); }
+  .hero-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .hero-label.match { color: var(--red); }
+  .hero-label.no-match { color: var(--sage); }
+  .hero-name { font-size: 22px; font-weight: 600; color: var(--ink); }
+  .hero-sub { font-size: 13px; color: var(--ink-mid); margin-top: 3px; }
+
+  .summary-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .summary-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 500;
+    background: var(--white);
+    border: 0.5px solid var(--border);
+    color: var(--ink-mid);
+  }
+  .summary-chip i { font-size: 14px; color: var(--sage); }
+
+  .detection-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 0.5px solid rgba(74,124,111,0.07);
+    transition: background 0.12s;
+  }
+  .detection-row:last-child { border-bottom: none; }
+  .det-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 0.5px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .det-thumb-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    border: 0.5px solid var(--border);
+    background: var(--sage-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sage-mid);
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .det-info { flex: 1; }
+  .det-person { font-size: 14.5px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+  .det-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--ink-mid);
+  }
+  .det-meta span { display: flex; align-items: center; gap: 4px; }
+  .det-meta i { font-size: 13px; color: var(--ink-soft); }
+  .det-distance {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .dist-value { font-size: 18px; font-weight: 600; }
+  .dist-label { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+
+  .dist-high { color: var(--red); }
+  .dist-mid  { color: var(--amber); }
+  .dist-low  { color: var(--sage); }
+
+  .confidence-bar {
+    height: 5px;
+    border-radius: 3px;
+    background: var(--border);
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .confidence-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease 0.3s;
+  }
+
+  .actions-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 0.5px solid var(--border);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero result banner -->
+{% if final_person and final_person != "No confident match found" %}
+<div class="result-hero match">
+  <div class="hero-icon match"><i class="ti ti-user-scan"></i></div>
+  <div>
+    <div class="hero-label match">Top match identified</div>
+    <div class="hero-name">{{ final_person }}</div>
+    <div class="hero-sub">Detected most frequently across the video. Review detections below before concluding.</div>
+  </div>
+</div>
+{% else %}
+<div class="result-hero no-match">
+  <div class="hero-icon no-match"><i class="ti ti-user-question"></i></div>
+  <div>
+    <div class="hero-label no-match">No confident match</div>
+    <div class="hero-name">Unknown</div>
+    <div class="hero-sub">No face in the video matched known individuals above the confidence threshold.</div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Summary chips -->
+<div class="summary-chips">
+  <div class="summary-chip">
+    <i class="ti ti-eye"></i>
+    {{ detections|length }} detection{{ 's' if detections|length != 1 else '' }}
+  </div>
+  {% if summary %}
+  {% for person, count in summary.items() %}
+  <div class="summary-chip">
+    <i class="ti ti-user"></i>
+    {{ person }} — {{ count }} time{{ 's' if count != 1 else '' }}
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+
+<!-- Detections list -->
+<div class="card">
+  <div class="card-title"><i class="ti ti-list-search"></i> All detections</div>
+
+  {% if detections %}
+  {% for d in detections %}
+  <div class="detection-row">
+    {% if d.crop_image %}
+    <img src="{{ d.crop_image }}" class="det-thumb" alt="Face crop" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div class="det-thumb-placeholder" style="display:none"><i class="ti ti-user"></i></div>
+    {% else %}
+    <div class="det-thumb-placeholder"><i class="ti ti-user"></i></div>
+    {% endif %}
+
+    <div class="det-info">
+      <div class="det-person">{{ d.person }}</div>
+      <div class="det-meta">
+        <span><i class="ti ti-clock"></i> {{ d.timestamp }}s</span>
+        <span><i class="ti ti-map-pin"></i> {{ d.location }}</span>
+        {% if d.frame_image %}
+        <span>
+          <a href="{{ d.frame_image }}" target="_blank" style="color:var(--sage); font-size:12px;">
+            <i class="ti ti-external-link" style="font-size:13px; vertical-align:-2px;"></i> View frame
+          </a>
+        </span>
+        {% endif %}
+      </div>
+      <div class="confidence-bar">
+        <div class="confidence-fill
+          {% if d.distance < 0.4 %}dist-high{% elif d.distance < 0.7 %}dist-mid{% else %}dist-low{% endif %}"
+          style="width: {{ [((1 - d.distance) * 100)|round|int, 0]|max }}%;
+                 background: {% if d.distance < 0.4 %}var(--red){% elif d.distance < 0.7 %}var(--amber){% else %}var(--sage){% endif %};">
+        </div>
+      </div>
+    </div>
+
+    <div class="det-distance">
+      <div class="dist-value
+        {% if d.distance < 0.4 %}dist-high{% elif d.distance < 0.7 %}dist-mid{% else %}dist-low{% endif %}">
+        {{ "%.3f"|format(d.distance) }}
+      </div>
+      <div class="dist-label">
+        {% if d.distance < 0.4 %}high match{% elif d.distance < 0.7 %}moderate{% else %}low match{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div style="text-align:center; padding:32px 20px; color:var(--ink-soft);">
+    <i class="ti ti-scan" style="font-size:36px; display:block; margin-bottom:10px; color:var(--sage-mid)"></i>
+    <p style="font-size:14px; color:var(--ink-mid)">No detections recorded for this video.</p>
+  </div>
+  {% endif %}
+
+  <div class="actions-bar">
+    <a href="/upload">
+      <button class="btn btn-primary"><i class="ti ti-plus"></i> New complaint</button>
+    </a>
+    <a href="/">
+      <button class="btn btn-outline"><i class="ti ti-layout-dashboard"></i> Dashboard</button>
+    </a>
+    <button class="btn btn-outline" onclick="window.print()">
+      <i class="ti ti-printer"></i> Print report
+    </button>
+  </div>
+</div>
+
+{% endblock %}
